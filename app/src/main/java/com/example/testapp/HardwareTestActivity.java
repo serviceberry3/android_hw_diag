@@ -2,7 +2,9 @@ package com.example.testapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 
 import org.w3c.dom.Text;
@@ -29,6 +31,19 @@ public class HardwareTestActivity extends AppCompatActivity {
 
         nameTextView.setText(name);
         numberTextView.setText(String.format("#%03d", number));
+
+
+        //listen for if button clicked
+        nameTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //when the test name is clicked, run the camera activity
+                Intent intent = new Intent(v.getContext(), CameraActivity.class);
+
+                //run camera
+                v.getContext().startActivity(intent);
+            }
+        });
     }
 
 

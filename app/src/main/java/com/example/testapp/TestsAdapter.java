@@ -19,6 +19,8 @@ public class TestsAdapter extends RecyclerView.Adapter<TestsAdapter.TestsViewHol
     public static class TestsViewHolder extends RecyclerView.ViewHolder { //needs to be public because using it in declaration above
         public LinearLayout containerView;
         public TextView textView;
+
+        //constructor
         TestsViewHolder(View view) {
             //use original
             super(view);
@@ -27,21 +29,26 @@ public class TestsAdapter extends RecyclerView.Adapter<TestsAdapter.TestsViewHol
             //take view that's passed in from recyclerview, convert it into something we can use
 
             //under the hood, Gradle automatically generates unique IDs for all the string IDs we gave stuff, puts in R
-            containerView=view.findViewById(R.id.pokdex_row); //integer that represents the container
-            textView = view.findViewById(R.id.pokedex_row_text_view);
+            containerView=view.findViewById(R.id.hwtest_row); //integer that represents the container
+            textView = view.findViewById(R.id.hwtest_row_text_view);
 
             //add event handler that can be executed when row is tapped
+            //call setOnClickListener method on a LINEARLAYOUT
             containerView.setOnClickListener(new View.OnClickListener() {
+                //override method for what to do on click
                 @Override
                 public void onClick(View v) {
                     //cast the returned object to a hardware test
                     HardwareComponentTest current = (HardwareComponentTest)containerView.getTag();
 
-                    //create Intent, specifying what class we want to instantiate
+                    //create Intent, specifying what class we want to instantiate and what activity we want to run
                     Intent intent = new Intent(v.getContext(), HardwareTestActivity.class);
+
+                    //load hardware name and number into the intent
                     intent.putExtra("name", current.getName());
                     intent.putExtra("number", current.getNumber());
 
+                    //start the activity with the intent
                     v.getContext().startActivity(intent);
                 }
             });
@@ -61,7 +68,7 @@ public class TestsAdapter extends RecyclerView.Adapter<TestsAdapter.TestsViewHol
     @Override
     public TestsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         //get our layout file, go from layout to a view. Inflate: go from XML file to a Java View. R.layout is auto generated for us
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.pokedex_row, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.hwtest_row, parent, false);
         //now we've converted XML file into Java View object in memory
 
         //return a new view holder containing this view
