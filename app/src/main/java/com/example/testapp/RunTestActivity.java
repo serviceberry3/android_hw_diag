@@ -64,7 +64,7 @@ public class RunTestActivity extends AppCompatActivity {
             }
 
             //else go through displays and try to get display information
-            for (Display thisDisplay : displayManager.getDisplays()) {
+            for (Display thisDisplay : displays) {
                 int displayId = thisDisplay.getDisplayId();
                 Toast.makeText(RunTestActivity.this, "Trying Display #" + String.format("%d", displayId), Toast.LENGTH_SHORT).show();
 
