@@ -36,20 +36,15 @@ public class HardwareTestActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String name = getIntent().getStringExtra("name");
+
                 //when the test name is clicked, run the camera activity
-                Intent intent = new Intent(v.getContext(), CameraActivity.class);
-
+                Intent intent = new Intent(v.getContext(), RunTestActivity.class);
                 //store the component name in intent
-                intent.putExtra("component", nameTextView.getText());
+                intent.putExtra("component", name);
 
-                //run camera
-                if (name.equals("Camera")) {
-                    startActivity(intent);
-                }
-                //Toast.makeText(getApplicationContext(), "Testing 123", Toast.LENGTH_SHORT).show();
+                //run the given test
+                startActivity(intent);
             }
         });
     }
-
-
 }

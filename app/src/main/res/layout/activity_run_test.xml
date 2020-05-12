@@ -9,7 +9,7 @@
     android:paddingRight="16dp"
     android:weightSum="10"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".CameraActivity">
+    tools:context=".RunTestActivity">
 
     <ImageView
         android:id="@+id/image_view"
@@ -25,7 +25,6 @@
         android:layout_weight="1"
         android:background="@android:color/holo_red_dark"
         android:textColor="@android:color/white"
-        android:text="Test Camera"
         />
 
 </LinearLayout>

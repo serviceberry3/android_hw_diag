@@ -58,7 +58,7 @@ public class TestsAdapter extends RecyclerView.Adapter<TestsAdapter.TestsViewHol
     //need some data to start
     private List<HardwareComponentTest> tests= Arrays.asList(
             new HardwareComponentTest("Camera", 1),
-            new HardwareComponentTest("Sensor", 2),
+            new HardwareComponentTest("Display", 2),
             new HardwareComponentTest("NFC", 3)
     );
 
