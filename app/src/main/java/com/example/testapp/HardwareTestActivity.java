@@ -27,7 +27,7 @@ public class HardwareTestActivity extends AppCompatActivity {
         nameTextView = findViewById(R.id.test_name);
         numberTextView = findViewById(R.id.test_number);
 
-        nameTextView.setText(name);
+        nameTextView.setText("Click here for "+name+" test.");
         numberTextView.setText(String.format("#%03d", number));
 
 
@@ -35,6 +35,7 @@ public class HardwareTestActivity extends AppCompatActivity {
         nameTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String name = getIntent().getStringExtra("name");
                 //when the test name is clicked, run the camera activity
                 Intent intent = new Intent(v.getContext(), CameraActivity.class);
 
@@ -42,7 +43,7 @@ public class HardwareTestActivity extends AppCompatActivity {
                 intent.putExtra("component", nameTextView.getText());
 
                 //run camera
-                if (nameTextView.getText().toString().equals("Camera")) {
+                if (name.equals("Camera")) {
                     startActivity(intent);
                 }
                 //Toast.makeText(getApplicationContext(), "Testing 123", Toast.LENGTH_SHORT).show();
