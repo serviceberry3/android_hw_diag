@@ -7,8 +7,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 public class HardwareTestActivity extends AppCompatActivity {
     private TextView nameTextView;
     private TextView numberTextView;
@@ -40,8 +38,14 @@ public class HardwareTestActivity extends AppCompatActivity {
                 //when the test name is clicked, run the camera activity
                 Intent intent = new Intent(v.getContext(), CameraActivity.class);
 
+                //store the component name in intent
+                intent.putExtra("component", nameTextView.getText());
+
                 //run camera
-                v.getContext().startActivity(intent);
+                if (nameTextView.getText().toString().equals("Camera")) {
+                    startActivity(intent);
+                }
+                //Toast.makeText(getApplicationContext(), "Testing 123", Toast.LENGTH_SHORT).show();
             }
         });
     }

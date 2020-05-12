@@ -20,7 +20,7 @@ public class TestsAdapter extends RecyclerView.Adapter<TestsAdapter.TestsViewHol
         public LinearLayout containerView;
         public TextView textView;
 
-        //constructor
+        //constructor - called for new TestsAdapter
         TestsViewHolder(View view) {
             //use original
             super(view);
