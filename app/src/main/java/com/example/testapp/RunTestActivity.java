@@ -1,11 +1,17 @@
 package com.example.testapp;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.display.DisplayManager;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.Display;
 import android.view.View;
 import android.widget.Button;
@@ -35,10 +41,48 @@ public class RunTestActivity extends AppCompatActivity {
                 switch (component) {
                     case "Camera": {cameraTest(); break;}
                     case "Display": {displayTest(); break;}
+                    case "Audio Outputs": {audioOutTest(); break;}
                 }
             }
         });
     }
+
+    //get audio outputs and display them
+    public void audioOutTest() {
+        if (checkAudioOutputs()<0) {
+            Toast.makeText(RunTestActivity.this, "FAIL", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(RunTestActivity.this, "PASS", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    //get list of audio devices, print them out, play beep
+    public int checkAudioOutputs() {
+        AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+
+        //get array of audio device informations
+        assert audioManager != null;
+        AudioDeviceInfo[] deviceInfos = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+
+        if (deviceInfos.length == 0) {
+            //no output devices found, so FAIL
+            return -1;
+        }
+
+        //otherwise we'll go through array and print out human-readable IDs of the devices
+        for (AudioDeviceInfo thisInfo: deviceInfos) {
+            Toast.makeText(RunTestActivity.this, thisInfo.getProductName().toString(), Toast.LENGTH_SHORT).show();
+        }
+
+        Toast.makeText(RunTestActivity.this, "Playing Three Beeps...", Toast.LENGTH_SHORT).show();
+        //try playing a beep on main speaker
+        ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
+        toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,500);
+
+        return 0;
+    }
+
 
     //run the test on all connected displays
     public void displayTest() {
