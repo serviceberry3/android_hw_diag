@@ -49,6 +49,10 @@ public class RunTestActivity extends AppCompatActivity {
 
     //get audio outputs and display them
     public void audioOutTest() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            Toast.makeText(RunTestActivity.this, "Device API too old to get audio devices", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (checkAudioOutputs()<0) {
             Toast.makeText(RunTestActivity.this, "FAIL", Toast.LENGTH_SHORT).show();
         }

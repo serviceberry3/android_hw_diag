@@ -59,7 +59,8 @@ public class TestsAdapter extends RecyclerView.Adapter<TestsAdapter.TestsViewHol
     private List<HardwareComponentTest> tests= Arrays.asList(
             new HardwareComponentTest("Camera", 1),
             new HardwareComponentTest("Display", 2),
-            new HardwareComponentTest("Audio Outputs", 3)
+            new HardwareComponentTest("Audio Outputs", 3),
+            new HardwareComponentTest("Vibrator", 4)
     );
 
     //override some methods from recyclerview adapter
