@@ -2,11 +2,13 @@ package com.example.testapp;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.camera2.CameraAccessException;
@@ -18,6 +20,7 @@ import android.media.ToneGenerator;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.view.Display;
@@ -27,6 +30,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.hardware.camera2.CameraManager;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RunTestActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 0;
@@ -153,7 +159,7 @@ public class RunTestActivity extends AppCompatActivity {
             Toaster.customToast("FAIL", RunTestActivity.this);
         }
         else {
-            Toaster.customToast("PASS", RunTestActivity.this);
+            //Toaster.customToast("PASS", RunTestActivity.this);
         }
     }
 
@@ -163,23 +169,66 @@ public class RunTestActivity extends AppCompatActivity {
 
         //get array of audio device informations
         assert audioManager != null;
-        AudioDeviceInfo[] deviceInfos = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+        final AudioDeviceInfo[] deviceInfos = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
 
         if (deviceInfos.length == 0) {
             //no output devices found, so FAIL
             return -1;
         }
 
+        Toaster.customToast(String.format("%d audio devices found: ", deviceInfos.length), RunTestActivity.this);
+        int index=0;
+
+        //create list of audio output devices connected
+        List<String> devices = new ArrayList<>();
+
         //otherwise we'll go through array and print out human-readable IDs of the devices
-        for (AudioDeviceInfo thisInfo: deviceInfos) {
-            Toaster.customToast(thisInfo.getProductName().toString(), RunTestActivity.this);
+        for (AudioDeviceInfo thisInfo : deviceInfos) {
+            String deviceName = thisInfo.getProductName().toString();
+            Toaster.customToast(String.format("Device #%d: ", index++)+deviceName, RunTestActivity.this);
+            devices.add(deviceName);
         }
 
-        Toaster.customToast("Playing three beeps...", RunTestActivity.this);
-        //try playing a beep on main speaker
-        ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-        toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,500);
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
 
+            }
+        }, 6000);
+
+        //create string of all audio devices
+        String joinedList = String.join(", ", devices);
+
+        /*
+        Thread thread = new Thread(){
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(Toast.LENGTH_SHORT * deviceInfos.length); // As I am using LENGTH_LONG in Toast
+                    RunTestActivity.this.finish();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread.start();
+        */
+
+        new AlertDialog.Builder(RunTestActivity.this)
+                .setTitle("Found audio output devices")
+                .setMessage("Found these devices: "+joinedList)
+
+                // Specifying a listener allows you to take an action before dismissing the dialog.
+                // The dialog is automatically dismissed when a dialog button is clicked.
+                .setPositiveButton("Test all", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Continue with delete operation
+                    }
+                })
+
+                // A null listener allows the button to dismiss the dialog and take no further action.
+                .setNegativeButton("Dismiss", null)
+                .show();
         return 0;
     }
 
