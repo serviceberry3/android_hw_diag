@@ -9,6 +9,7 @@
     android:foreground="?android:attr/selectableItemBackground">
 
     <TextView
+        android:textSize="30dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/hwtest_row_text_view" />
