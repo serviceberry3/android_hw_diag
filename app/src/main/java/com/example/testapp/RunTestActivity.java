@@ -43,8 +43,8 @@ import java.util.List;
 public class RunTestActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 0;
     private int failure;
-    private Button endButton;
-    private String component;
+    private Button endButton, btnTestName;
+    String component;
 
     ImageView imageView;
     @Override
@@ -53,7 +53,7 @@ public class RunTestActivity extends AppCompatActivity {
         setContentView(R.layout.activity_run_test);
         component=getIntent().getStringExtra("component");
 
-        Button btnTestName = (Button) findViewById(R.id.button_camera);
+        btnTestName = (Button) findViewById(R.id.button_camera);
         btnTestName.setText("Test " + component);
 
         imageView = (ImageView) findViewById(R.id.image_view);
@@ -78,6 +78,13 @@ public class RunTestActivity extends AppCompatActivity {
         Context context;
         public ExampleAsyncTask(Context context) {
             this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            btnTestName.setText("Testing...");
         }
 
         @Override
@@ -114,10 +121,10 @@ public class RunTestActivity extends AppCompatActivity {
 
     public void proxSensorTest() {
         if (checkProxSensor()<0) {
-            Toaster.customToast("FAIL", RunTestActivity.this);
+            failTest();
         }
         else {
-            Toaster.customToast("PASS", RunTestActivity.this);
+            passTest();
         }
     }
 
@@ -161,7 +168,7 @@ public class RunTestActivity extends AppCompatActivity {
 
     public void bluetoothTest() {
         if (checkBluetooth()<0) {
-            Toaster.customToast("FAIL", RunTestActivity.this);
+            failTest();
         }
     }
 
@@ -210,14 +217,25 @@ public class RunTestActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         //enabling bluetooth failed
         super.onActivityResult(requestCode, resultCode, data);
+        //see if it's the bluetooth activity
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_CANCELED) {
-                Toaster.customToast("FAIL", RunTestActivity.this);
+                failTest();
                 return;
             }
-            Toaster.customToast("PASS", RunTestActivity.this);
+            passTest();
             BluetoothAdapter.getDefaultAdapter().disable();
         }
+    }
+
+    public void passTest() {
+        btnTestName.setText("PASSED");
+        Toaster.customToast("PASS", RunTestActivity.this);
+    }
+
+    public void failTest() {
+        Toaster.customToast("FAIL", RunTestActivity.this);
+        btnTestName.setText("FAILED");
     }
 
     public void vibrateTest() {
@@ -231,7 +249,8 @@ public class RunTestActivity extends AppCompatActivity {
         //pulse a vibration
         Toaster.customToast("Found vibrator, vibrating...", RunTestActivity.this);
         vibrator.vibrate(500);
-        Toaster.customToast("PASS", RunTestActivity.this);
+        btnTestName.setText("PASSED");
+        passTest();
     }
 
     //get audio outputs and display them
@@ -336,7 +355,7 @@ public class RunTestActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                Toaster.customToast("PASS", RunTestActivity.this);
+                passTest();
             }
         }, 6000);
     }
@@ -383,10 +402,10 @@ public class RunTestActivity extends AppCompatActivity {
     //run the test on all connected displays
     public void displayTest() {
         if (printDisplayIDs()<0) {
-            Toaster.customToast("FAIL", RunTestActivity.this);
+            failTest();
         }
         else {
-            Toaster.customToast("PASS", RunTestActivity.this);
+            passTest();
         }
     }
 
@@ -423,10 +442,10 @@ public class RunTestActivity extends AppCompatActivity {
         //Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); -- this is a way to take a picture, which would probably work for the test, but I went with something more base
         //startActivityForResult(intent, 0);
         if (printCameraIDs()<0) {
-            Toaster.customToast("FAIL", RunTestActivity.this);
+            failTest();
         }
         else {
-            Toaster.customToast("PASS", RunTestActivity.this);
+            passTest();
         }
     }
 
