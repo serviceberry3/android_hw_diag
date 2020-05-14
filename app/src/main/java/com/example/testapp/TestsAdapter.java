@@ -62,7 +62,8 @@ public class TestsAdapter extends RecyclerView.Adapter<TestsAdapter.TestsViewHol
             new HardwareComponentTest("Audio Outputs", 3),
             new HardwareComponentTest("Vibrator", 4),
             new HardwareComponentTest("Bluetooth", 5),
-            new HardwareComponentTest("Battery Info", 6)
+            new HardwareComponentTest("Battery Info", 6),
+            new HardwareComponentTest("Ambient light/prox sensor", 7)
     );
 
     //override some methods from recyclerview adapter

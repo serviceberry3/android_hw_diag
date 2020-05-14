@@ -10,6 +10,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.display.DisplayManager;
@@ -62,9 +64,38 @@ public class RunTestActivity extends AppCompatActivity {
                     case "Vibrator": {vibrateTest(); break;}
                     case "Bluetooth": {bluetoothTest(); break;}
                     case "Battery Info": {getBatteryInfo(); break;}
+                    case "Ambient light/prox sensor": {proxSensorTest(); break;}
                 }
             }
         });
+    }
+
+    public void proxSensorTest() {
+        if (checkProxSensor()<0) {
+            Toaster.customToast("FAIL", RunTestActivity.this);
+        }
+        else {
+            Toaster.customToast("PASS", RunTestActivity.this);
+        }
+    }
+
+    public int checkProxSensor() {
+        SensorManager sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+
+        List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_PROXIMITY);
+
+        //nothing found, something's wrong, error
+        if (sensors.isEmpty()) {
+            return -1;
+        }
+
+        Toaster.customToast(String.format("%d Prox Sensors Found", sensors.size()), RunTestActivity.this);
+
+        int index=0;
+        for (Sensor thisSensor : sensors) {
+            Toaster.customToast(String.format("Sensor #%d: ", index++) + thisSensor.getName(), RunTestActivity.this);
+        }
+        return 0;
     }
 
     public void getBatteryInfo() {
