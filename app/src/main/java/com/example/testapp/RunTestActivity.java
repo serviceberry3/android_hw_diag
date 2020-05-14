@@ -1,7 +1,6 @@
 package com.example.testapp;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -15,16 +14,15 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.display.DisplayManager;
 import android.media.AudioDeviceInfo;
+import android.media.AudioFormat;
 import android.media.AudioManager;
-import android.media.ToneGenerator;
+import android.media.AudioTrack;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
-import android.provider.MediaStore;
 import android.view.Display;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -155,12 +153,7 @@ public class RunTestActivity extends AppCompatActivity {
             Toaster.customToast("Device API too old to get audio devices", RunTestActivity.this);
             return;
         }
-        if (checkAudioOutputs()<0) {
-            Toaster.customToast("FAIL", RunTestActivity.this);
-        }
-        else {
-            //Toaster.customToast("PASS", RunTestActivity.this);
-        }
+        checkAudioOutputs();
     }
 
     //get list of audio devices, print them out, play beep
@@ -182,56 +175,88 @@ public class RunTestActivity extends AppCompatActivity {
         //create list of audio output devices connected
         List<String> devices = new ArrayList<>();
 
+
         //otherwise we'll go through array and print out human-readable IDs of the devices
         for (AudioDeviceInfo thisInfo : deviceInfos) {
             String deviceName = thisInfo.getProductName().toString();
-            Toaster.customToast(String.format("Device #%d: ", index++)+deviceName, RunTestActivity.this);
+            Toaster.customToast(String.format("Device #%d: ", index++)+deviceName+String.format(" of type %d", thisInfo.getId()), RunTestActivity.this);
             devices.add(deviceName);
         }
+
+        //create string of all audio devices
+        final String joinedList = String.join(", ", devices);
 
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
+                new AlertDialog.Builder(RunTestActivity.this)
+                        .setTitle("Found audio output devices")
+                        .setMessage("Found these devices: "+joinedList)
 
+                        // Specifying a listener allows you to take an action before dismissing the dialog.
+                        // The dialog is automatically dismissed when a dialog button is clicked.
+                        .setPositiveButton("Test all", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                playSounds();
+                                Toaster.customToast("PASS", RunTestActivity.this);
+                            }
+                        })
+
+                        // A null listener allows the button to dismiss the dialog and take no further action.
+                        .setNegativeButton("Dismiss", null)
+                        .show();
             }
-        }, 6000);
+        }, 2000*(deviceInfos.length +1));
 
-        //create string of all audio devices
-        String joinedList = String.join(", ", devices);
-
-        /*
-        Thread thread = new Thread(){
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(Toast.LENGTH_SHORT * deviceInfos.length); // As I am using LENGTH_LONG in Toast
-                    RunTestActivity.this.finish();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        thread.start();
-        */
-
-        new AlertDialog.Builder(RunTestActivity.this)
-                .setTitle("Found audio output devices")
-                .setMessage("Found these devices: "+joinedList)
-
-                // Specifying a listener allows you to take an action before dismissing the dialog.
-                // The dialog is automatically dismissed when a dialog button is clicked.
-                .setPositiveButton("Test all", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        // Continue with delete operation
-                    }
-                })
-
-                // A null listener allows the button to dismiss the dialog and take no further action.
-                .setNegativeButton("Dismiss", null)
-                .show();
         return 0;
     }
 
+    public int playSounds() {
+        final AudioTrack soundAtSpecificFrequency =   generateTone(500, 6000, 0);
+        soundAtSpecificFrequency.play();
+        Toaster.customToast("Main stereo left", RunTestActivity.this);
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                soundAtSpecificFrequency.pause();
+                final AudioTrack soundAtSpecificFrequency2 =   generateTone(500, 6000, 1);
+                soundAtSpecificFrequency2.play();
+                Toaster.customToast("Main stereo right", RunTestActivity.this);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        soundAtSpecificFrequency2.pause();
+                    }
+                }, 2000);
+
+            }
+        }, 2000);
+        return 0;
+    }
+
+    private AudioTrack generateTone(double freqHz, int durationMs, int which)
+    {
+        int count = (int)(44100.0 * 2.0 * (durationMs / 1000.0)) & ~1;
+        short[] samples = new short[count];
+        for (int i = 0; i < count; i += 2) {
+
+            short sample = (short)(Math.sin(2 * Math.PI * i / (44100.0 / freqHz)) * 0x7FFF);
+            if (which==0) { //only play on left
+                samples[i + 0] = sample;
+                samples[i + 1] = 0;
+            }
+            else { //only play on right
+                samples[i + 0] = 0;
+                samples[i + 1] = sample;
+            }
+        }
+        AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, 44100,
+                AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
+                count * (Short.SIZE / 8), AudioTrack.MODE_STATIC);
+
+        track.write(samples, 0, count);
+        return track;
+    }
 
     //run the test on all connected displays
     public void displayTest() {
