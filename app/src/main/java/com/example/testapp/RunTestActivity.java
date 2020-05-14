@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.provider.MediaStore;
 import android.view.Display;
 import android.view.View;
 import android.widget.Button;
@@ -213,22 +214,30 @@ public class RunTestActivity extends AppCompatActivity {
 
     public int playSounds() {
         final AudioTrack soundAtSpecificFrequency =   generateTone(500, 6000, 0);
-        soundAtSpecificFrequency.play();
         Toaster.customToast("Main stereo left", RunTestActivity.this);
+        soundAtSpecificFrequency.play();
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 soundAtSpecificFrequency.pause();
                 final AudioTrack soundAtSpecificFrequency2 =   generateTone(500, 6000, 1);
-                soundAtSpecificFrequency2.play();
                 Toaster.customToast("Main stereo right", RunTestActivity.this);
+                soundAtSpecificFrequency2.play();
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         soundAtSpecificFrequency2.pause();
+                        final AudioTrack soundAtSpecificFrequency3 =   generateTone(500, 6000, 2);
+                        Toaster.customToast("Phone speaker", RunTestActivity.this);
+                        soundAtSpecificFrequency3.play();
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                soundAtSpecificFrequency3.pause();
+                            }
+                        }, 2000);
                     }
                 }, 2000);
-
             }
         }, 2000);
         return 0;
@@ -241,18 +250,33 @@ public class RunTestActivity extends AppCompatActivity {
         for (int i = 0; i < count; i += 2) {
 
             short sample = (short)(Math.sin(2 * Math.PI * i / (44100.0 / freqHz)) * 0x7FFF);
-            if (which==0) { //only play on left
-                samples[i + 0] = sample;
+
+            if (which == 2) {
+                samples[i] = sample;
+                samples[i+1] = sample;
+            } else if (which == 0) { //only play on left
+                samples[i] = sample;
                 samples[i + 1] = 0;
-            }
-            else { //only play on right
-                samples[i + 0] = 0;
+            } else { //only play on right
+                samples[i] = 0;
                 samples[i + 1] = sample;
             }
         }
-        AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, 44100,
-                AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
-                count * (Short.SIZE / 8), AudioTrack.MODE_STATIC);
+        AudioTrack track;
+        if (which==2) {
+            track = new AudioTrack(AudioManager.STREAM_VOICE_CALL, 44100,
+                    AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                    count * (Short.SIZE / 8), AudioTrack.MODE_STATIC);
+            AudioManager audioManager = (AudioManager)getSystemService(AUDIO_SERVICE);
+            assert audioManager != null;
+            audioManager.setSpeakerphoneOn(false);
+        }
+
+        else {
+            track = new AudioTrack(AudioManager.STREAM_MUSIC, 44100,
+                    AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
+                    count * (Short.SIZE / 8), AudioTrack.MODE_STATIC);
+        }
 
         track.write(samples, 0, count);
         return track;
