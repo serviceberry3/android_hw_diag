@@ -9,7 +9,8 @@
     android:paddingRight="16dp"
     android:weightSum="10"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".RunTestActivity">
+    tools:context=".RunTestActivity"
+    android:id="@+id/activity_test_launcher">
 
     <ImageView
         android:id="@+id/image_view"
@@ -25,6 +26,19 @@
         android:layout_weight="1"
         android:background="@android:color/holo_red_dark"
         android:textColor="@android:color/white"
+        android:layout_margin="10dp"
+        />
+
+    <Button
+        android:id="@+id/end_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Done"
+        android:background="@android:color/holo_blue_bright"
+        android:textColor="@android:color/black"
+        android:layout_margin="10dp"
+        android:visibility="invisible"
         />
 
 </LinearLayout>

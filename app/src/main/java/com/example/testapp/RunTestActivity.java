@@ -3,7 +3,9 @@ package com.example.testapp;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.arch.core.util.Function;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,12 +28,14 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Vibrator;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.hardware.camera2.CameraManager;
 import android.widget.Toast;
+import android.os.AsyncTask;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,36 +43,74 @@ import java.util.List;
 public class RunTestActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 0;
     private int failure;
+    private Button endButton;
+    private String component;
+
     ImageView imageView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_run_test);
-
-        final String component = getIntent().getStringExtra("component");
+        component=getIntent().getStringExtra("component");
 
         Button btnTestName = (Button) findViewById(R.id.button_camera);
         btnTestName.setText("Test " + component);
 
         imageView = (ImageView) findViewById(R.id.image_view);
+        endButton = (Button) findViewById(R.id.end_button);
+
 
         btnTestName.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //check component type, run test
                 assert component != null;
-                switch (component) {
-                    case "Camera": {cameraTest(); break;}
-                    case "Display": {displayTest(); break;}
-                    case "Audio Outputs": {audioOutTest(); break;}
-                    case "Vibrator": {vibrateTest(); break;}
-                    case "Bluetooth": {bluetoothTest(); break;}
-                    case "Battery Info": {getBatteryInfo(); break;}
-                    case "Ambient light/prox sensor": {proxSensorTest(); break;}
-                }
+                ExampleAsyncTask testsTask = new ExampleAsyncTask(RunTestActivity.this);
+                testsTask.execute(component);
             }
         });
     }
+
+    public void getI2cDevices() {
+    }
+
+    private class ExampleAsyncTask extends AsyncTask<String, Void, Integer> {
+        Context context;
+        public ExampleAsyncTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected Integer doInBackground(String... strings) {
+            RunTestActivity runTestActivity = (RunTestActivity) this.context;
+            Log.d("HELLO", "I am back thread");
+            switch (strings[0]) {
+                case "Camera": {runTestActivity.cameraTest(); break;}
+                case "Display": {runTestActivity.displayTest(); break;}
+                case "Audio Outputs": {Log.d("HELLO", "Audio"); runTestActivity.audioOutTest(); break;}
+                case "Vibrator": {runTestActivity.vibrateTest(); break;}
+                case "Bluetooth": {runTestActivity.bluetoothTest(); break;}
+                case "Battery Info": {runTestActivity.getBatteryInfo(); break;}
+                case "Ambient light/prox sensor": {runTestActivity.proxSensorTest(); break;}
+                case "I2C Device List": {runTestActivity.getI2cDevices(); break;}
+            }
+            return 0;
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+
+            endButton.setVisibility(View.VISIBLE);
+            ((Button) (endButton)).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    RunTestActivity.this.finish();
+                }
+            });
+        }
+    }
+
 
     public void proxSensorTest() {
         if (checkProxSensor()<0) {
@@ -129,16 +171,28 @@ public class RunTestActivity extends AppCompatActivity {
             //device doesn't support bluetooth
             return -1;
         }
-        Toast.makeText(RunTestActivity.this, "Device supports Bluetooth", Toast.LENGTH_SHORT).show();
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(RunTestActivity.this, "Device supports Bluetooth", Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
         //Run 2 different tests: first, try to get the human-readable name of the Bluetooth adapter
-        String name = bluetoothAdapter.getName();
+        final String name = bluetoothAdapter.getName();
 
         if (name==null) {
             return -1;
         }
 
-        Toast.makeText(RunTestActivity.this, name, Toast.LENGTH_SHORT).show();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(RunTestActivity.this, name, Toast.LENGTH_SHORT).show();
+            }
+        });
 
         //the second test we wanna run is we'll try to enable bluetooth, and check the result code
 
@@ -202,6 +256,7 @@ public class RunTestActivity extends AppCompatActivity {
             Toaster.customToast("FAIL: NO OUTPUT DEVICE FOUND", RunTestActivity.this);
         }
 
+        Log.d("HELLO", "Toasting");
         Toaster.customToast(String.format("%d audio devices found: ", deviceInfos.length), RunTestActivity.this);
         int index=0;
 
@@ -221,7 +276,7 @@ public class RunTestActivity extends AppCompatActivity {
 
         //post an alert dialog pop-up portal to the playSounds() sequence to the main thread MessageQueue,
         //a few seconds out (based on how many devices and the toast duration)
-        new Handler().postDelayed(new Runnable() {
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
                 new AlertDialog.Builder(RunTestActivity.this)
@@ -260,7 +315,7 @@ public class RunTestActivity extends AppCompatActivity {
            Toaster.customToast(text, RunTestActivity.this);
             final AudioTrack soundAtSpecificFrequency = generateTone(500, 6000, which);
             soundAtSpecificFrequency.play();
-            new Handler().postDelayed(new Runnable() {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     soundAtSpecificFrequency.pause();
@@ -273,9 +328,9 @@ public class RunTestActivity extends AppCompatActivity {
         //run audible test of L and R main stereo, then phone speaker. Finally we passed the test
 
         //post up the three tests to the MessageQueue to be run by looper
-        new Handler().post(new ToneRunnable(0, "Main stereo left"));
-        new Handler().postDelayed(new ToneRunnable(1, "Main stereo right"), 2000);
-        new Handler().postDelayed(new ToneRunnable(2, "Phone speaker"), 4000);
+        new Handler(Looper.getMainLooper()).post(new ToneRunnable(0, "Main stereo left"));
+        new Handler(Looper.getMainLooper()).postDelayed(new ToneRunnable(1, "Main stereo right"), 2000);
+        new Handler(Looper.getMainLooper()).postDelayed(new ToneRunnable(2, "Phone speaker"), 4000);
 
         //post up a PASS toast
         new Handler().postDelayed(new Runnable() {
