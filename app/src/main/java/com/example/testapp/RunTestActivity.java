@@ -21,6 +21,7 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.view.Display;
@@ -167,7 +168,7 @@ public class RunTestActivity extends AppCompatActivity {
 
         if (deviceInfos.length == 0) {
             //no output devices found, so FAIL
-            return -1;
+            Toaster.customToast("FAIL: NO OUTPUT DEVICE FOUND", RunTestActivity.this);
         }
 
         Toaster.customToast(String.format("%d audio devices found: ", deviceInfos.length), RunTestActivity.this);
@@ -187,6 +188,8 @@ public class RunTestActivity extends AppCompatActivity {
         //create string of all audio devices
         final String joinedList = String.join(", ", devices);
 
+        //post an alert dialog pop-up portal to the playSounds() sequence to the main thread MessageQueue,
+        //a few seconds out (based on how many devices and the toast duration)
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -198,8 +201,8 @@ public class RunTestActivity extends AppCompatActivity {
                         // The dialog is automatically dismissed when a dialog button is clicked.
                         .setPositiveButton("Test all", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
+                                //run through the sound tests
                                 playSounds();
-                                Toaster.customToast("PASS", RunTestActivity.this);
                             }
                         })
 
@@ -212,35 +215,44 @@ public class RunTestActivity extends AppCompatActivity {
         return 0;
     }
 
-    public int playSounds() {
-        final AudioTrack soundAtSpecificFrequency =   generateTone(500, 6000, 0);
-        Toaster.customToast("Main stereo left", RunTestActivity.this);
-        soundAtSpecificFrequency.play();
+    class ToneRunnable implements Runnable {
+        int which;
+        String text;
+
+        ToneRunnable(int which, String text) {
+            this.which=which;
+            this.text=text;
+        }
+
+        @Override
+        public void run() {
+           Toaster.customToast(text, RunTestActivity.this);
+            final AudioTrack soundAtSpecificFrequency = generateTone(500, 6000, which);
+            soundAtSpecificFrequency.play();
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    soundAtSpecificFrequency.pause();
+                }
+            }, 2000);
+        }
+    }
+
+    public void playSounds() {
+        //run audible test of L and R main stereo, then phone speaker. Finally we passed the test
+
+        //post up the three tests to the MessageQueue to be run by looper
+        new Handler().post(new ToneRunnable(0, "Main stereo left"));
+        new Handler().postDelayed(new ToneRunnable(1, "Main stereo right"), 2000);
+        new Handler().postDelayed(new ToneRunnable(2, "Phone speaker"), 4000);
+
+        //post up a PASS toast
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                soundAtSpecificFrequency.pause();
-                final AudioTrack soundAtSpecificFrequency2 =   generateTone(500, 6000, 1);
-                Toaster.customToast("Main stereo right", RunTestActivity.this);
-                soundAtSpecificFrequency2.play();
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        soundAtSpecificFrequency2.pause();
-                        final AudioTrack soundAtSpecificFrequency3 =   generateTone(500, 6000, 2);
-                        Toaster.customToast("Phone speaker", RunTestActivity.this);
-                        soundAtSpecificFrequency3.play();
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                soundAtSpecificFrequency3.pause();
-                            }
-                        }, 2000);
-                    }
-                }, 2000);
+                Toaster.customToast("PASS", RunTestActivity.this);
             }
-        }, 2000);
-        return 0;
+        }, 6000);
     }
 
     private AudioTrack generateTone(double freqHz, int durationMs, int which)
