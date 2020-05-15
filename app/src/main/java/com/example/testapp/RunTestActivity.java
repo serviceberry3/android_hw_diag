@@ -12,6 +12,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.graphics.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
@@ -39,6 +41,7 @@ import android.os.AsyncTask;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class RunTestActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 0;
@@ -469,8 +472,15 @@ public class RunTestActivity extends AppCompatActivity {
     public int printCameraIDs() {
         try {
             CameraManager cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
-
-            assert cameraManager != null;
+            if (cameraManager==null) {
+                Log.d("CAMERA", "NULL");
+                return -1;
+            }
+            String[] cameras = cameraManager.getCameraIdList();
+            if (cameras.length<3){
+                return -1;
+            }
+            Log.d("CAMERAS", String.format("%d", cameras.length));
             for (String cameraId : cameraManager.getCameraIdList()) {
                 Toaster.customToast("Trying Camera #"+cameraId, RunTestActivity.this);
                 CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
