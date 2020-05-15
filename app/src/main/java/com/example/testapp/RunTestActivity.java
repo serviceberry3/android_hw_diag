@@ -84,7 +84,12 @@ public class RunTestActivity extends AppCompatActivity {
         protected void onPreExecute() {
             super.onPreExecute();
 
-            btnTestName.setText("Testing...");
+            RunTestActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    btnTestName.setText("Testing...");
+                }
+            });
         }
 
         @Override
@@ -229,13 +234,25 @@ public class RunTestActivity extends AppCompatActivity {
     }
 
     public void passTest() {
-        btnTestName.setText("PASSED");
-        Toaster.customToast("PASS", RunTestActivity.this);
+        RunTestActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                btnTestName.setText("PASSED");
+                Toaster.customToast("PASS", RunTestActivity.this);
+            }
+        });
+
     }
 
     public void failTest() {
-        Toaster.customToast("FAIL", RunTestActivity.this);
-        btnTestName.setText("FAILED");
+        RunTestActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toaster.customToast("FAIL", RunTestActivity.this);
+                btnTestName.setText("FAILED");
+            }
+        });
+
     }
 
     public void vibrateTest() {
@@ -249,7 +266,6 @@ public class RunTestActivity extends AppCompatActivity {
         //pulse a vibration
         Toaster.customToast("Found vibrator, vibrating...", RunTestActivity.this);
         vibrator.vibrate(500);
-        btnTestName.setText("PASSED");
         passTest();
     }
 
