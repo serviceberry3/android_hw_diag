@@ -1,0 +1,1 @@
+I'm tearing the Google Pixel 4 apart to strip it down to its core components for mounting on a quadcopter. This is a basic app for checking if certain hardware components are still functional/attached to the phone. It needs some more development.
