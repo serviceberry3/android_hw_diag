@@ -462,7 +462,7 @@ public class RunTestActivity extends AppCompatActivity {
     public void cameraTest() {
         //Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); -- this is a way to take a picture, which would probably work for the test, but I went with something more base
         //startActivityForResult(intent, 0);
-        if (printCameraIDs()<0) {
+        if (printCameraIDs() < 0) {
             failTest();
         }
         else {
@@ -474,21 +474,39 @@ public class RunTestActivity extends AppCompatActivity {
     public int printCameraIDs() {
         try {
             CameraManager cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
-            if (cameraManager==null) {
+            if (cameraManager == null) {
                 Log.d("CAMERA", "NULL");
                 return -1;
             }
             String[] cameras = cameraManager.getCameraIdList();
-            if (cameras.length<3){
+            int numCamsFound = cameras.length;
+
+            Toaster.customToast("Found " + numCamsFound + " cameras.", RunTestActivity.this);
+            //fail if no cameras found
+            if (numCamsFound == 0)
                 return -1;
-            }
+
             Log.d("CAMERAS", String.format("%d", cameras.length));
+
             for (String cameraId : cameraManager.getCameraIdList()) {
-                Toaster.customToast("Trying Camera #"+cameraId, RunTestActivity.this);
+                Toaster.customToast("Trying Camera #" + cameraId, RunTestActivity.this);
                 CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
+
+                //don't use front facing camera in this example
+                Integer cameraDirection = characteristics.get(CameraCharacteristics.LENS_FACING);
+
+                if (cameraDirection != null && cameraDirection == CameraCharacteristics.LENS_FACING_BACK) {
+                    //skip this one because it's a back-facing camera, we wanna use the front-facing
+                    ;Toaster.customToast("Found rear-facing camera", RunTestActivity.this);
+                }
+
+                else if (cameraDirection != null && cameraDirection == CameraCharacteristics.LENS_FACING_FRONT) {
+                    Toaster.customToast("Found front-facing camera", RunTestActivity.this);;
+                }
             }
             return 0;
         }
+
         catch(CameraAccessException|IllegalArgumentException e) {
             return -1;
         }
